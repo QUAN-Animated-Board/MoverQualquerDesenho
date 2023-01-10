@@ -26,41 +26,37 @@ namespace TesteMoverLinhass
             Size = new Size(800, 400);
             this.DoubleBuffered = true;
 
+            bm = new Bitmap(pic.Width, pic.Height);
+            g = Graphics.FromImage(bm);
+            g.Clear(Color.White);
+            pic.Image = bm;
+
             Invalidate();
 
             
             
         }
 
+        Bitmap bm;
+        Graphics g;
+
+        Point px, py;
+        Pen p = new Pen(Color.Black, 1);
+        Pen erase = new Pen(Color.White, 10);
+        int index;
+
+        int x, y, sX, sY, cX, cY;
+
         public int selected = 0;
         public bool is_selected = false;
 
         
 
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            e.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.High;
-            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
-            Graphics g = e.Graphics;
+        //protected override void OnPaint(PaintEventArgs e){
+            
 
-            foreach (lines l in lines_list)
-            {
-                //new
-                if (super_form.super_action.Equals(action.move))
-                {
-                    Pen selection_pen_line = new Pen(Brushes.Blue, 1); //muda o contorno de mover 
-                    g.DrawPath(selection_pen_line, l.outline);
-                }
-                //new
 
-                g.DrawPath(l.pen, l.path_line);
-                g.FillPath(Brushes.Black, l.arrow_path_line);
-               
-            }
-
-           
-
-        }
+        //}
 
         MouseButtons m = MouseButtons.Left;
         public RectangleF selected_recatngle = new RectangleF();
@@ -78,6 +74,95 @@ namespace TesteMoverLinhass
 
         private void Form1_MouseMove(object sender, MouseEventArgs e)
         {
+            
+        }
+
+        private void Form1_MouseDown(object sender, MouseEventArgs e)
+        {
+            
+
+        }
+
+        private void Form1_MouseUp(object sender, MouseEventArgs e)
+        {
+            
+        }
+
+        GraphicsPath inifilated_line = new GraphicsPath();
+        private void Form1_MouseClick(object sender, MouseEventArgs e)
+        {
+            
+        }
+
+        public int line_counter = 0;
+        public List<lines> lines_list = new List<lines>();
+
+        private void pic_Paint(object sender, PaintEventArgs e)
+        {
+            e.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.High;
+            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+            Graphics g = e.Graphics;
+
+            foreach (lines l in lines_list)
+            {
+                //new
+                if (super_form.super_action.Equals(action.move))
+                {
+                    Pen selection_pen_line = new Pen(Brushes.Blue, 1); //muda o contorno de mover 
+                    g.DrawPath(selection_pen_line, l.outline);
+
+                }
+                //new
+
+                g.DrawPath(l.pen, l.path_line);
+                g.FillPath(Brushes.Black, l.arrow_path_line);
+
+
+            }
+            //Application.DoEvents();
+            //pic.Refresh();
+            Invalidate();
+        }
+
+        public bool first_point_in_line = true;
+
+        private void Form1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void pic_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (super_form.super_action.Equals(action.move))
+            {
+                skip_checking_lines = false;
+
+                int counter = 0;
+
+
+                first = false;
+            }
+        }
+
+        private void pic_MouseDown(object sender, MouseEventArgs e)
+        {
+            paint = true;
+        }
+
+        private void pic_MouseUp(object sender, MouseEventArgs e)
+        {
+            paint = false;
+            if (super_form.super_action.Equals(action.line))
+            {
+                super_form.super_action = action.none;
+                super_acao = acao.ending;
+                System.Diagnostics.Debug.WriteLine("En");
+                super_form.sf.finalizacao();
+            }
+        }
+
+        private void pic_MouseMove(object sender, MouseEventArgs e)
+        {
             if (paint)
             {
                 if (super_form.super_action.Equals(action.line))
@@ -89,7 +174,7 @@ namespace TesteMoverLinhass
 
             skip_checking_lines = false;
 
-            if (first && e.Button == m && super_form.super_action.Equals(action.move))
+            if (first && e.Button == m && super_form.super_action.Equals(action.move)) //Mexer para so mover quando clicar no unica linha (inves de todos ficarem selecionados)
             {
                 int counter = 0;
 
@@ -122,6 +207,7 @@ namespace TesteMoverLinhass
                     }
 
                 }
+                pic.Refresh();
                 first = false;
 
             }
@@ -149,7 +235,7 @@ namespace TesteMoverLinhass
                 continous_select = false;
                 //new
             }
-
+            pic.Refresh();
             Invalidate();
 
 
@@ -157,44 +243,6 @@ namespace TesteMoverLinhass
             oldX = e.X;
             oldY = e.Y;
         }
-
-        private void Form1_MouseDown(object sender, MouseEventArgs e)
-        {
-            paint = true;
-
-        }
-
-        private void Form1_MouseUp(object sender, MouseEventArgs e)
-        {
-            paint = false;
-            if (super_form.super_action.Equals(action.line))
-            {
-                super_form.super_action = action.none;
-                super_acao = acao.ending;
-                System.Diagnostics.Debug.WriteLine("En");
-                super_form.sf.finalizacao();
-            }
-        }
-
-        GraphicsPath inifilated_line = new GraphicsPath();
-        private void Form1_MouseClick(object sender, MouseEventArgs e)
-        {
-            if (super_form.super_action.Equals(action.move))
-            {
-                skip_checking_lines = false;
-
-                int counter = 0;
-
-                
-                first = false;
-            }
-        }
-
-        public int line_counter = 0;
-        public List<lines> lines_list = new List<lines>();
-
-        public bool first_point_in_line = true;
-
 
         private void line_action(MouseEventArgs e)
         {
@@ -218,6 +266,7 @@ namespace TesteMoverLinhass
             current_line.path_line = a;
             current_line.path_line.AddLines(current_line.point_line.ToArray());
 
+            pic.Refresh();
             Invalidate();
         }
 

@@ -12,7 +12,7 @@ namespace TesteMoverLinhass
 {
     public enum action
     {
-        line, move, none
+        none, line, move, bucket
     }
 
     public partial class super_form : Form
@@ -106,6 +106,9 @@ namespace TesteMoverLinhass
 
         }
 
-     
+        private void toolStripButton3_Click(object sender, EventArgs e)
+        {
+            super_action = action.bucket;
+        }
     }
 }
