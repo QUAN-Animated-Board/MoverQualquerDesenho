@@ -74,6 +74,7 @@ namespace TesteMoverLinhass
         private void toolStripButton1_Click(object sender, EventArgs e)
         {
             super_action = action.line;
+            Form1.q = 0;
         }
 
         private void toolStripButton2_Click(object sender, EventArgs e)

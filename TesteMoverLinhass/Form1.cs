@@ -23,6 +23,8 @@ namespace TesteMoverLinhass
         public Form1()
         {
             InitializeComponent();
+            //this.SetStyle(ControlStyles.ResizeRedraw, true);
+
             Size = new Size(800, 400);
             this.DoubleBuffered = true;
 
@@ -97,27 +99,34 @@ namespace TesteMoverLinhass
         public int line_counter = 0;
         public List<lines> lines_list = new List<lines>();
 
+        public static int q = 0;
+
         private void pic_Paint(object sender, PaintEventArgs e)
         {
             e.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.High;
             e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
-            Graphics g = e.Graphics;
-
+            Graphics gx = e.Graphics;
+            //System.Diagnostics.Debug.WriteLine(lines_list.Count);
             foreach (lines l in lines_list)
             {
                 //new
                 if (super_form.super_action.Equals(action.move))
                 {
+ 
                     Pen selection_pen_line = new Pen(Brushes.Blue, 1); //muda o contorno de mover 
-                    g.DrawPath(selection_pen_line, l.outline);
+                    gx.DrawPath(selection_pen_line, l.outline);
 
                 }
                 //new
+                if (super_form.super_action.Equals(action.line))
+                {
+                    g.DrawPath(l.pen, l.path_line);
+                    g.FillPath(Brushes.Black, l.arrow_path_line);
+                }
 
-                g.DrawPath(l.pen, l.path_line);
-                g.FillPath(Brushes.Black, l.arrow_path_line);
-
-
+                gx.DrawPath(l.pen, l.path_line);
+                gx.FillPath(Brushes.Black, l.arrow_path_line);
+                
             }
             //Application.DoEvents();
             //pic.Refresh();
@@ -125,6 +134,7 @@ namespace TesteMoverLinhass
         }
 
         public bool first_point_in_line = true;
+        private Color xcc;
 
         private void Form1_Click(object sender, EventArgs e)
         {
@@ -142,6 +152,11 @@ namespace TesteMoverLinhass
 
                 first = false;
             }
+
+            if (super_form.super_action.Equals(action.bucket)) {
+                Point point = set_point(pic, e.Location);
+                Fill(bm, point.X, point.Y, Color.Goldenrod);
+            }
         }
 
         private void pic_MouseDown(object sender, MouseEventArgs e)
@@ -152,8 +167,10 @@ namespace TesteMoverLinhass
         private void pic_MouseUp(object sender, MouseEventArgs e)
         {
             paint = false;
+            
             if (super_form.super_action.Equals(action.line))
             {
+
                 super_form.super_action = action.none;
                 super_acao = acao.ending;
                 System.Diagnostics.Debug.WriteLine("En");
@@ -188,6 +205,7 @@ namespace TesteMoverLinhass
                         {
                             selected_type = "line";
                             is_selected = true;
+
                         }
 
                         else if (Line.outline.IsVisible(with_offset) || Line.arrow_path_line.IsVisible(with_offset))
@@ -196,11 +214,20 @@ namespace TesteMoverLinhass
                             is_selected = true;
                             continous_select = true;
                             selected_line = line_move_counter;
+
+                            System.Diagnostics.Debug.WriteLine("Carregou."); //Faz com que o que esteja desenhado na tela fique branco para poder mover(dar impressao que não tinha nada ali) (Gambiarra)
+                            xcc = Line.pen.Color;
+                            Line.pen.Color = Color.White;
+                            g.DrawPath(Line.pen, Line.path_line);
+                            g.FillPath(Brushes.Black, Line.arrow_path_line);
+                            Line.pen.Color = xcc;
+                            q = 1;
                             break;
                         }
 
                         else
                         {
+                            
                             is_selected = false;
                         }
                         line_move_counter++;
@@ -214,7 +241,7 @@ namespace TesteMoverLinhass
 
             if (is_selected && e.Button == m && super_form.super_action.Equals(action.move))
             {
-
+                
                 if (selected_type.Equals("line"))
                 {
                     Matrix ma = new Matrix();
@@ -223,6 +250,7 @@ namespace TesteMoverLinhass
                     selected_line_from_list.path_line.Transform(ma);
                     selected_line_from_list.arrow_path_line.Transform(ma);
                     selected_line_from_list.outline.Transform(ma);
+
                 }
                 //new
             }
@@ -234,6 +262,15 @@ namespace TesteMoverLinhass
                 //new
                 continous_select = false;
                 //new
+
+                if (q == 1) //Para entrar quando ele depois de mover poder usar o Balde de Tinta
+                {
+                    var selected_line_from_list = lines_list[selected_line];
+                    System.Diagnostics.Debug.WriteLine("Saiu.");
+                    g.DrawPath(selected_line_from_list.pen, selected_line_from_list.path_line);
+                    g.FillPath(Brushes.Black, selected_line_from_list.arrow_path_line);
+                    q = 0;
+                }
             }
             pic.Refresh();
             Invalidate();
@@ -270,6 +307,55 @@ namespace TesteMoverLinhass
             Invalidate();
         }
 
+
+        static Point set_point(PictureBox pb, Point pt)
+        {
+
+            float px = 1f * pb.Image.Width / pb.Width;
+            float pY = 1f * pb.Image.Height / pb.Height;
+            return new Point((int)(pt.X * px), (int)(pt.Y * pY));
+        }
+
+        private void validate(Bitmap bm, Stack<Point> sp, int x, int y, Color old_color, Color new_color)
+        {
+
+            Color cx = bm.GetPixel(x, y);
+            //System.Diagnostics.Debug.WriteLine(cx);
+            if (cx == old_color)
+            {
+                sp.Push(new Point(x, y));
+                bm.SetPixel(x, y, new_color);
+            }
+        }
+
+        public void Fill(Bitmap bm, int x, int y, Color new_clr)
+        {
+
+            Color old_color = bm.GetPixel(x, y);
+            Stack<Point> pixel = new Stack<Point>();
+            pixel.Push(new Point(x, y));
+            bm.SetPixel(x, y, new_clr);
+            if (old_color == new_clr)
+            {
+                return;
+            }
+
+            while (pixel.Count > 0)
+            {
+
+                Point pt = (Point)pixel.Pop();
+                if (pt.X > 0 && pt.Y > 0 && pt.X < bm.Width - 1 && pt.Y < bm.Height - 1)
+                {
+
+                    validate(bm, pixel, pt.X - 1, pt.Y, old_color, new_clr);
+                    validate(bm, pixel, pt.X, pt.Y - 1, old_color, new_clr);
+                    validate(bm, pixel, pt.X + 1, pt.Y, old_color, new_clr);
+                    validate(bm, pixel, pt.X, pt.Y + 1, old_color, new_clr);
+                }
+            }
+
+
+        }
 
     }
 }
