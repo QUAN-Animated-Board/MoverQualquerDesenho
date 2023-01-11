@@ -54,11 +54,7 @@ namespace TesteMoverLinhass
 
         
 
-        //protected override void OnPaint(PaintEventArgs e){
-            
-
-
-        //}
+        //protected override void OnPaint(PaintEventArgs e){}
 
         MouseButtons m = MouseButtons.Left;
         public RectangleF selected_recatngle = new RectangleF();
@@ -73,29 +69,6 @@ namespace TesteMoverLinhass
 
         bool paint = false;
 
-
-        private void Form1_MouseMove(object sender, MouseEventArgs e)
-        {
-            
-        }
-
-        private void Form1_MouseDown(object sender, MouseEventArgs e)
-        {
-            
-
-        }
-
-        private void Form1_MouseUp(object sender, MouseEventArgs e)
-        {
-            
-        }
-
-        GraphicsPath inifilated_line = new GraphicsPath();
-        private void Form1_MouseClick(object sender, MouseEventArgs e)
-        {
-            
-        }
-
         public int line_counter = 0;
         public List<lines> lines_list = new List<lines>();
 
@@ -107,6 +80,14 @@ namespace TesteMoverLinhass
             e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
             Graphics gx = e.Graphics;
             //System.Diagnostics.Debug.WriteLine(lines_list.Count);
+
+            if (pontosClicados >= 1)
+            {
+                //System.Diagnostics.Debug.WriteLine(x);
+                gx.DrawLine(p, cX, cY, x, y);
+
+            }
+
             foreach (lines l in lines_list)
             {
                 //new
@@ -124,6 +105,8 @@ namespace TesteMoverLinhass
                     g.FillPath(Brushes.Black, l.arrow_path_line);
                 }
 
+                
+
                 gx.DrawPath(l.pen, l.path_line);
                 gx.FillPath(Brushes.Black, l.arrow_path_line);
                 
@@ -135,14 +118,16 @@ namespace TesteMoverLinhass
 
         public bool first_point_in_line = true;
         private Color xcc;
-
-        private void Form1_Click(object sender, EventArgs e)
-        {
-
-        }
+        private int pontosClicados = 0;
 
         private void pic_MouseClick(object sender, MouseEventArgs e)
         {
+            if (super_form.super_action.Equals(action.TwoPoint))
+            {
+
+                line_action(e);
+            }
+
             if (super_form.super_action.Equals(action.move))
             {
                 skip_checking_lines = false;
@@ -162,12 +147,16 @@ namespace TesteMoverLinhass
         private void pic_MouseDown(object sender, MouseEventArgs e)
         {
             paint = true;
+
+            py = e.Location;
+            cX = e.X;
+            cY = e.Y;
         }
 
         private void pic_MouseUp(object sender, MouseEventArgs e)
         {
             paint = false;
-            
+            //Ferramenta Pincel
             if (super_form.super_action.Equals(action.line))
             {
 
@@ -176,17 +165,83 @@ namespace TesteMoverLinhass
                 System.Diagnostics.Debug.WriteLine("En");
                 super_form.sf.finalizacao();
             }
+
+            //Ferramenta Linha
+            if (super_form.super_action.Equals(action.TwoPoint)){
+                pontosClicados++;
+                //System.Diagnostics.Debug.WriteLine(pontosClicados);
+            }
+
+            if (pontosClicados == 2)
+            {
+                pontosClicados = 0;
+                if (super_form.super_action.Equals(action.TwoPoint))
+                {
+
+                    super_form.super_action = action.none;
+                    super_acao = acao.ending;
+                    System.Diagnostics.Debug.WriteLine("En");
+                    super_form.sf.finalizacao();
+                }
+            }
+
         }
 
         private void pic_MouseMove(object sender, MouseEventArgs e)
         {
-            if (paint)
-            {
+            
+
+            if (paint){
+
                 if (super_form.super_action.Equals(action.line))
                 {
 
                     line_action(e);
                 }
+
+                if (super_form.super_action.Equals(action.eraser)) {
+                    px = e.Location;
+                    g.DrawLine(erase, px, py);
+                    py = px;
+                }
+
+            }
+
+            if (first && e.Button == m && super_form.super_action.Equals(action.eraser)) 
+            {
+
+                if (!skip_checking_lines)
+                {
+                    int line_move_counter = 0;
+                    Point with_offset = new Point(e.X - 10, e.Y - 10);
+                    foreach (lines Line in lines_list)
+                    {
+
+                        if (Line.outline.IsVisible(with_offset) || Line.arrow_path_line.IsVisible(with_offset))
+                        {
+
+                            selected_line = line_move_counter;
+
+                            System.Diagnostics.Debug.WriteLine(selected_line); //Faz com que o que esteja desenhado na tela fique branco para poder mover(dar impressao que não tinha nada ali) (Gambiarra)
+                            
+                            lines_list.RemoveAt(selected_line);
+                            line_counter--;
+                            xcc = Line.pen.Color;
+                            Line.pen.Color = Color.White;
+                            g.DrawPath(Line.pen, Line.path_line);
+                            g.FillPath(Brushes.Black, Line.arrow_path_line);
+                            Line.pen.Color = xcc;
+
+                            break;
+                        }
+
+                        line_move_counter++;
+                    }
+
+                }
+                pic.Refresh();
+                first = false;
+
             }
 
             skip_checking_lines = false;
@@ -279,6 +334,11 @@ namespace TesteMoverLinhass
             //new
             oldX = e.X;
             oldY = e.Y;
+
+            x = e.X;
+            y = e.Y;
+            sX = e.X - cX;
+            sY = e.Y - cY;
         }
 
         private void line_action(MouseEventArgs e)
@@ -292,6 +352,8 @@ namespace TesteMoverLinhass
                 line_counter++;
             }
             lines current_line = new lines();
+            System.Diagnostics.Debug.WriteLine("Linha");
+            System.Diagnostics.Debug.WriteLine(line_counter - 1);
             current_line = lines_list.ElementAt<lines>(line_counter - 1);
 
             Point Point_line = new Point();

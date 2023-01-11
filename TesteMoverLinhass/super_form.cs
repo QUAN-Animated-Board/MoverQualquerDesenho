@@ -12,7 +12,7 @@ namespace TesteMoverLinhass
 {
     public enum action
     {
-        none, line, move, bucket
+        none, line, move, bucket, TwoPoint, eraser
     }
 
     public partial class super_form : Form
@@ -110,6 +110,16 @@ namespace TesteMoverLinhass
         private void toolStripButton3_Click(object sender, EventArgs e)
         {
             super_action = action.bucket;
+        }
+
+        private void toolStripButton4_Click(object sender, EventArgs e)
+        {
+            super_action = action.TwoPoint;
+        }
+
+        private void toolStripButton5_Click(object sender, EventArgs e)
+        {
+            super_action = action.eraser;
         }
     }
 }
